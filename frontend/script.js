@@ -8,6 +8,8 @@ const chat = document.getElementById("chat");
 const promptInput = document.getElementById("prompt");
 const sendBtn = document.getElementById("sendBtn");
 const clearBtn = document.getElementById("clearBtn");
+const stopBtn = document.getElementById("stopBtn");
+let activeController = null;
 
 // Add message to chat
 function addMessage(role, content, extraClass = "") {
@@ -29,162 +31,117 @@ function addMessage(role, content, extraClass = "") {
 
 // Send message with streaming
 async function sendMessage() {
-
     const text = promptInput.value.trim();
 
     if (!text || sendBtn.disabled) return;
 
-    addMessage("user", text);
-
-    messages.push({
-        role: "user",
-        content: text
-    });
+    const userBubble = addMessage("user", text);
+    messages.push({ role: "user", content: text });
 
     promptInput.value = "";
     promptInput.style.height = "auto";
 
+    activeController = new AbortController();
+
     sendBtn.disabled = true;
-    sendBtn.textContent = "...";
+    stopBtn.hidden = false;
 
-    const loading = addMessage(
-        "assistant",
-        "Thinking...",
-        "typing"
-    );
-
+    const loading = addMessage("assistant", "Thinking...", "typing");
     let reply = "";
 
     try {
-
         const response = await fetch(API_URL, {
-
             method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 model: MODEL,
                 messages: messages,
                 stream: true
-            })
+            }),
+            signal: activeController.signal
         });
 
         if (!response.ok) {
-            throw new Error(
-                await response.text() ||
-                `API Error: ${response.status}`
-            );
-        }
-
-        if (!response.body) {
-            throw new Error("Streaming not supported.");
+            throw new Error(await response.text() || `API Error: ${response.status}`);
         }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-
         let buffer = "";
         let finished = false;
 
         function processLine(line) {
-
             if (!line.trim()) return;
 
             const data = JSON.parse(line);
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (data.error) throw new Error(data.error);
 
             const content = data.message?.content || "";
 
             if (content) {
-
                 reply += content;
-
                 loading.classList.remove("typing");
                 loading.textContent = reply;
-
                 chat.scrollTop = chat.scrollHeight;
             }
 
-            if (data.done) {
-                finished = true;
-            }
+            if (data.done) finished = true;
         }
 
         while (!finished) {
-
             const { value, done } = await reader.read();
 
             if (done) break;
 
-            buffer += decoder.decode(value, {
-                stream: true
-            });
+            buffer += decoder.decode(value, { stream: true });
 
             const lines = buffer.split("\n");
-
             buffer = lines.pop();
 
             for (const line of lines) {
-
                 processLine(line);
-
                 if (finished) break;
             }
         }
 
         buffer += decoder.decode();
 
-        if (buffer.trim()) {
-            processLine(buffer);
-        }
+        if (buffer.trim()) processLine(buffer);
 
-        if (!reply) {
-            throw new Error("Empty response from model.");
-        }
+        if (!reply) throw new Error("Empty response from model.");
 
-        messages.push({
-            role: "assistant",
-            content: reply
-        });
+        messages.push({ role: "assistant", content: reply });
 
     } catch (error) {
-
-        console.error("Chat error:", error);
-
-        loading.classList.remove("typing");
-
-        if (reply) {
-
-            loading.textContent += "\n[Stream interrupted]";
-
-            messages.push({
-                role: "assistant",
-                content: reply
-            });
-
+        if (error.name === "AbortError") {
+            if (reply) {
+                loading.classList.remove("typing");
+                loading.textContent = reply + "\n\n[Generation stopped]";
+                messages.push({ role: "assistant", content: reply });
+            } else {
+                loading.remove();
+                userBubble.remove();
+                messages.pop();
+            }
         } else {
+            console.error("Chat error:", error);
+            loading.classList.remove("typing");
+            loading.textContent = reply || "Error: " + error.message;
 
-            loading.remove();
-            messages.pop();
-
-            addMessage(
-                "assistant",
-                "Error: " + error.message,
-                "error"
-            );
+            if (reply) {
+                messages.push({ role: "assistant", content: reply });
+            } else {
+                loading.remove();
+                addMessage("assistant", "Error: " + error.message, "error");
+                messages.pop();
+            }
         }
-
     } finally {
-
+        activeController = null;
         sendBtn.disabled = false;
+        stopBtn.hidden = true;
         sendBtn.textContent = "Send ↑";
-
         promptInput.focus();
     }
 }
@@ -225,4 +182,10 @@ promptInput.addEventListener("input", function() {
 
     this.style.height =
         Math.min(this.scrollHeight, 130) + "px";
+});
+
+stopBtn.addEventListener("click", () => {
+    if (activeController) {
+        activeController.abort();
+    }
 });

@@ -9,6 +9,14 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 app.post('/api/chat', async (req, res) => {
+    const controller = new AbortController();
+
+    res.on('close', () => {
+        if (!res.writableEnded) {
+            controller.abort();
+        }
+    });
+
     try {
         const response = await fetch(
             'http://127.0.0.1:11434/api/chat',
@@ -20,13 +28,13 @@ app.post('/api/chat', async (req, res) => {
                 body: JSON.stringify({
                     ...req.body,
                     stream: true
-                })
+                }),
+                signal: controller.signal
             }
         );
 
         if (!response.ok) {
-            return res.status(response.status)
-                .send(await response.text());
+            return res.status(response.status).send(await response.text());
         }
 
         res.setHeader('Content-Type', 'application/x-ndjson');
@@ -39,12 +47,12 @@ app.post('/api/chat', async (req, res) => {
         res.end();
 
     } catch (error) {
+        if (controller.signal.aborted) return;
+
         console.error(error);
 
         if (!res.headersSent) {
-            res.status(502).json({
-                error: error.message
-            });
+            res.status(502).json({ error: error.message });
         } else {
             res.end();
         }

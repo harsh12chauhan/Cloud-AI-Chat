@@ -162,6 +162,19 @@ button:disabled {
     margin-top: 10px;
 }
 
+.stop {
+    background: #dc2626;
+    color: white;
+}
+
+.stop:hover {
+    background: #b91c1c;
+}
+
+button[hidden] {
+    display: none;
+}
+
 @media (max-width: 600px) {
     #chat {
         padding: 15px;
