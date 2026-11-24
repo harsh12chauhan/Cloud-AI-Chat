@@ -1,0 +1,54 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwen AI Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <header>
+        <h2>✦ Qwen AI Chat</h2>
+
+        <div class="header-actions">
+            <span class="status">● Ready</span>
+            <button class="clear" id="clearBtn">Clear chat</button>
+        </div>
+    </header>
+
+    <main id="chat">
+        <div class="welcome" id="welcome">
+            <h1>How can I help you?</h1>
+            <p>Chat with Qwen 2.5 AI</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="input-area">
+
+            <textarea
+                id="prompt"
+                placeholder="Message Qwen AI..."
+                rows="1"
+            ></textarea>
+
+            <button id="sendBtn">Send ↑</button>
+
+        </div>
+
+        <div class="note">
+            Powered by Qwen 2.5 · 1.5B · Streaming enabled
+        </div>
+    </footer>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

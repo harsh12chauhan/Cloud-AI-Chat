@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+frontend/node_modules/
+
+# Environment variables
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Cloudflared
+cloudflared
+cloudflared.exe
+cloudflared.log
+cloudflared.pid
+.cert.pem
+*.cloudflared
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
