@@ -27,12 +27,28 @@ Qwen 2.5 1.5B
 
 The frontend sends messages to the Express endpoint at `/api/chat`. The server forwards requests to Ollama and streams the response to the browser.
 
-## Requirements
+## Prerequisites
 
-- Linux with Bash (the supplied shell scripts target Linux).
-- Docker.
-- Node.js 18 or later and npm.
-- Internet access for downloading the Ollama image and model.
+Before setting up the project, make sure you have:
+
+- **Operating system:** Linux (recommended for the included Bash scripts).
+- **Docker:** Docker Engine installed and running. The setup script uses Docker to run Ollama.
+- **Node.js:** Version 18 or later.
+- **npm:** Installed with Node.js, for installing the frontend dependencies.
+- **Internet connection:** Required to download the Ollama Docker image and the Qwen model during initial setup.
+- **Available ports:** TCP ports `8080` (web application) and `11434` (Ollama API) should be available.
+- **Hardware:** A machine capable of running the selected Ollama model. Model performance and memory requirements depend on your hardware; consult the [Ollama model library](https://ollama.com/library) for model-specific information.
+
+You can verify the main tools are installed with:
+
+```bash
+docker --version
+docker info
+node --version
+npm --version
+```
+
+The supplied shell scripts target Linux/Bash. On Windows, use WSL2 with Docker support or adapt the scripts for your environment.
 
 ## Setup
 
@@ -107,6 +123,7 @@ Cloud-AI-Chat/
 ├── setup-ollama.sh      # Starts Ollama and pulls the model
 ├── public-url.sh        # Starts an optional Cloudflare Tunnel
 ├── run.sh               # Convenience launcher
+├── LICENSE              # MIT License
 └── .gitignore
 ```
 
@@ -120,6 +137,10 @@ Cloud-AI-Chat/
 ## Contributing
 
 Bug reports, suggestions, and pull requests are welcome. For substantial changes, consider opening an issue to discuss the proposal first.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
 
 ## Author
 
