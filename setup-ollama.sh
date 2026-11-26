@@ -14,6 +14,10 @@ docker run -d \
   --restart unless-stopped \
   ollama/ollama
 
+echo "ollama container up and running."
+
+sleep 5
+
 echo "Downloading Qwen model..."
 
 docker exec -it ollama ollama pull qwen2.5:1.5b
